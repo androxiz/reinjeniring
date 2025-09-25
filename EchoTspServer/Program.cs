@@ -171,5 +171,6 @@ public class UdpTimedSender : IDisposable
     {
         StopSending();
         _udpClient.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
