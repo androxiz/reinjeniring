@@ -13,7 +13,7 @@ namespace EchoTspServer;
 public class EchoServer
 {
     private readonly int _port;
-    private TcpListener _listener;
+    private TcpListener? _listener;
     private readonly CancellationTokenSource _cancellationTokenSource;
 
 
