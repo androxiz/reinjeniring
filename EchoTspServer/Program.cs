@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace EchoTspServer;
 /// <summary>
 /// This program was designed for test purposes only
 /// Not for a review
@@ -12,8 +13,8 @@ using System.Threading.Tasks;
 public class EchoServer
 {
     private readonly int _port;
-    private TcpListener _listener;
-    private CancellationTokenSource _cancellationTokenSource;
+    private TcpListener? _listener;
+    private readonly CancellationTokenSource _cancellationTokenSource;
 
 
     public EchoServer(int port)
@@ -47,7 +48,7 @@ public class EchoServer
         Console.WriteLine("Server shutdown.");
     }
 
-    private async Task HandleClientAsync(TcpClient client, CancellationToken token)
+    private static async Task HandleClientAsync(TcpClient client, CancellationToken token)
     {
         using (NetworkStream stream = client.GetStream())
         {
@@ -56,10 +57,10 @@ public class EchoServer
                 byte[] buffer = new byte[8192];
                 int bytesRead;
 
-                while (!token.IsCancellationRequested && (bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, token)) > 0)
+                while (!token.IsCancellationRequested && (bytesRead = await stream.ReadAsync(buffer, token)) > 0)
                 {
                     // Echo back the received message
-                    await stream.WriteAsync(buffer, 0, bytesRead, token);
+                    await stream.WriteAsync(buffer.AsMemory(0, bytesRead), token);
                     Console.WriteLine($"Echoed {bytesRead} bytes to the client.");
                 }
             }
@@ -78,12 +79,13 @@ public class EchoServer
     public void Stop()
     {
         _cancellationTokenSource.Cancel();
-        _listener.Stop();
+        if (_listener != null)
+            _listener.Stop();
         _cancellationTokenSource.Dispose();
         Console.WriteLine("Server stopped.");
     }
 
-    public static async Task Main(string[] args)
+    public static Task Main(string[] args)
     {
         EchoServer server = new EchoServer(5000);
 
@@ -109,6 +111,7 @@ public class EchoServer
             server.Stop();
             Console.WriteLine("Sender stopped.");
         }
+        return Task.CompletedTask;
     }
 }
 
@@ -118,7 +121,7 @@ public class UdpTimedSender : IDisposable
     private readonly string _host;
     private readonly int _port;
     private readonly UdpClient _udpClient;
-    private Timer _timer;
+    private Timer? _timer;
 
     public UdpTimedSender(string host, int port)
     {
@@ -137,7 +140,7 @@ public class UdpTimedSender : IDisposable
 
     ushort i = 0;
 
-    private void SendMessageCallback(object state)
+    private void SendMessageCallback(object? state)
     {
         try
         {
@@ -169,5 +172,6 @@ public class UdpTimedSender : IDisposable
     {
         StopSending();
         _udpClient.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
