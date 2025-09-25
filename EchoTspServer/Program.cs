@@ -84,7 +84,7 @@ public class EchoServer
         Console.WriteLine("Server stopped.");
     }
 
-    public static async Task Main(string[] args)
+    public static Task Main(string[] args)
     {
         EchoServer server = new EchoServer(5000);
 
@@ -110,6 +110,7 @@ public class EchoServer
             server.Stop();
             Console.WriteLine("Sender stopped.");
         }
+        return Task.CompletedTask;
     }
 }
 
@@ -119,7 +120,7 @@ public class UdpTimedSender : IDisposable
     private readonly string _host;
     private readonly int _port;
     private readonly UdpClient _udpClient;
-    private Timer _timer;
+    private Timer? _timer;
 
     public UdpTimedSender(string host, int port)
     {
