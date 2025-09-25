@@ -60,7 +60,7 @@ public class EchoServer
                 while (!token.IsCancellationRequested && (bytesRead = await stream.ReadAsync(buffer, token)) > 0)
                 {
                     // Echo back the received message
-                    await stream.WriteAsync(buffer.AsMemmory(0, bytesRead), token);
+                    await stream.WriteAsync(buffer.AsMemory(0, bytesRead), token);
                     Console.WriteLine($"Echoed {bytesRead} bytes to the client.");
                 }
             }
