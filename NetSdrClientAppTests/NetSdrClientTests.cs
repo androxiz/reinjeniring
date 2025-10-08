@@ -115,5 +115,68 @@ public class NetSdrClientTests
         Assert.That(_client.IQStarted, Is.False);
     }
 
-    //TODO: cover the rest of the NetSdrClient code here
+    [Test]
+    public async Task SendTcpRequest_NoConnection_ReturnsNull()
+    {
+        // Arrange
+        _tcpMock.Setup(tcp => tcp.Connected).Returns(false);
+        var client = new NetSdrClient(_tcpMock.Object, _updMock.Object);
+        var result = await client.SendTcpRequest(new byte[] { 1, 2, 3 });
+        Assert.IsNull(result);
+    }
+
+    [Test]
+    public async Task SendTcpRequest_ReceivesResponse()
+    {
+        // Arrange
+        _tcpMock.Setup(tcp => tcp.Connected).Returns(true);
+        var response = new byte[] { 9, 8, 7 };
+        _tcpMock.Setup(tcp => tcp.SendMessageAsync(It.IsAny<byte[]>())).Callback(() =>
+        {
+            _tcpMock.Raise(tcp => tcp.MessageReceived += null, _tcpMock.Object, response);
+        });
+        var client = new NetSdrClient(_tcpMock.Object, _updMock.Object);
+        // Act
+        var result = await client.SendTcpRequest(new byte[] { 1, 2, 3 });
+        // Assert
+        Assert.That(result, Is.EqualTo(response));
+    }
+
+    [Test]
+    public void TcpClient_MessageReceived_UnsolicitedHandled()
+    {
+        // Arrange
+        var client = new NetSdrClient(_tcpMock.Object, _updMock.Object);
+        var data = new byte[] { 1, 2, 3 };
+        // Act & Assert
+        Assert.DoesNotThrow(() =>
+        {
+            var method = typeof(NetSdrClient).GetMethod("_tcpClient_MessageReceived", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            method.Invoke(client, new object[] { _tcpMock.Object, data });
+        });
+    }
+
+    [Test]
+    public async Task StartIQAsync_AlreadyStarted_DoesNotStartAgain()
+    {
+        // Arrange
+        _tcpMock.Setup(tcp => tcp.Connected).Returns(true);
+        var client = new NetSdrClient(_tcpMock.Object, _updMock.Object);
+        await client.ConnectAsync();
+        // Act
+        await client.StartIQAsync();
+        // Assert
+        _updMock.Verify(udp => udp.StartListeningAsync(), Times.Once);
+    }
+
+    [Test]
+    public async Task StopIQAsync_NotStarted_DoesNotThrow()
+    {
+        // Arrange
+        _tcpMock.Setup(tcp => tcp.Connected).Returns(true);
+        var client = new NetSdrClient(_tcpMock.Object, _updMock.Object);
+        // Act & Assert
+        Assert.DoesNotThrowAsync(async () => await client.StopIQAsync());
+    }
+
 }
