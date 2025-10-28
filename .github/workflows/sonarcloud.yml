@@ -59,7 +59,7 @@ jobs:
           /k:"androxiz_reinjeniring" `
           /o:"androxiz" `
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
-          /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.xml" `
+          /d:sonar.cs.opencover.reportsPaths="merged-coverage.xml" `
           /d:sonar.cpd.cs.minimumTokens=40 `
           /d:sonar.cpd.cs.minimumLines=5 `
           /d:sonar.exclusions=**/bin/**,**/obj/**,**/sonarcloud.yml `
@@ -81,6 +81,14 @@ jobs:
             /p:CollectCoverage=true `
             /p:CoverletOutput=NetSdrClientAppTests/TestResults/coverage.xml `
             /p:CoverletOutputFormat=opencover
+
+          dotnet tool install --global coverlet.console
+          echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
+
+          coverlet merge `
+            EchoTspServerTests/TestResults/coverage.xml `
+            NetSdrClientAppTests/TestResults/coverage.xml `
+            --output merged-coverage.xml
           
         shell: pwsh
       # 3) END: SonarScanner
