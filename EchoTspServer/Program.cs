@@ -6,21 +6,26 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace EchoTspServer;
+
 /// <summary>
 /// This program was designed for test purposes only
-/// Not for a review
+/// Refactored for unit testing
 /// </summary>
 public class EchoServer
 {
     private readonly int _port;
     private TcpListener? _listener;
     private readonly CancellationTokenSource _cancellationTokenSource;
+    private readonly Func<Task<TcpClient>>? _acceptClientAsyncOverride;
 
+    // Для тестів: можна перевіряти стан токена
+    public bool IsCancellationRequested => _cancellationTokenSource.IsCancellationRequested;
 
-    public EchoServer(int port)
+    public EchoServer(int port, Func<Task<TcpClient>>? acceptClientAsyncOverride = null)
     {
         _port = port;
         _cancellationTokenSource = new CancellationTokenSource();
+        _acceptClientAsyncOverride = acceptClientAsyncOverride;
     }
 
     public async Task StartAsync()
@@ -33,9 +38,17 @@ public class EchoServer
         {
             try
             {
-                TcpClient client = await _listener.AcceptTcpClientAsync();
-                Console.WriteLine("Client connected.");
+                TcpClient client;
+                if (_acceptClientAsyncOverride != null)
+                {
+                    client = await _acceptClientAsyncOverride();
+                }
+                else
+                {
+                    client = await _listener.AcceptTcpClientAsync();
+                }
 
+                Console.WriteLine("Client connected.");
                 _ = Task.Run(() => HandleClientAsync(client, _cancellationTokenSource.Token));
             }
             catch (ObjectDisposedException)
@@ -48,7 +61,16 @@ public class EchoServer
         Console.WriteLine("Server shutdown.");
     }
 
-    private static async Task HandleClientAsync(TcpClient client, CancellationToken token)
+    /// <summary>
+    /// Метод, який можна тестувати: просто повертає те, що отримав
+    /// </summary>
+    public async Task<byte[]> EchoMessageAsync(byte[] message, CancellationToken token)
+    {
+        await Task.Yield();
+        return message;
+    }
+
+    private async Task HandleClientAsync(TcpClient client, CancellationToken token)
     {
         using (NetworkStream stream = client.GetStream())
         {
@@ -59,8 +81,9 @@ public class EchoServer
 
                 while (!token.IsCancellationRequested && (bytesRead = await stream.ReadAsync(buffer, token)) > 0)
                 {
-                    // Echo back the received message
-                    await stream.WriteAsync(buffer.AsMemory(0, bytesRead), token);
+                    // Використовуємо EchoMessageAsync для тестованої логіки
+                    byte[] response = await EchoMessageAsync(buffer.AsMemory(0, bytesRead).ToArray(), token);
+                    await stream.WriteAsync(response, token);
                     Console.WriteLine($"Echoed {bytesRead} bytes to the client.");
                 }
             }
@@ -94,7 +117,7 @@ public class EchoServer
 
         string host = "127.0.0.1"; // Target IP
         int port = 60000;          // Target Port
-        int intervalMilliseconds = 5000; // Send every 3 seconds
+        int intervalMilliseconds = 5000; // Send every 5 seconds
 
         using (var sender = new UdpTimedSender(host, port))
         {
@@ -114,7 +137,6 @@ public class EchoServer
         return Task.CompletedTask;
     }
 }
-
 
 public class UdpTimedSender : IDisposable
 {
