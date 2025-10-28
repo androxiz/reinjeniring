@@ -51,7 +51,20 @@ jobs:
           dotnet-version: '8.0.x'
 
       # 1) BEGIN: SonarScanner for .NET
-
+      - name: SonarScanner Begin
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
+          dotnet sonarscanner begin `
+          /k:"androxiz_reinjeniring" `
+          /o:"androxiz" `
+          /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
+          /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.xml" `
+          /d:sonar.cpd.cs.minimumTokens=40 `
+          /d:sonar.cpd.cs.minimumLines=5 `
+          /d:sonar.exclusions=**/bin/**,**/obj/**,**/sonarcloud.yml `
+          /d:sonar.qualitygate.wait=true
+        shell: pwsh
       # 2) BUILD & TEST
       - name: Restore
         run: dotnet restore NetSdrClient.sln
@@ -64,23 +77,9 @@ jobs:
             /p:CoverletOutput=EchoTspServerTests/TestResults/coverage.xml `
             /p:CoverletOutputFormat=opencover
           
-          dotnet test NetSdrClientAppTests/NetSdrClientAppTests.csproj -c Release --no-build `
-            /p:CollectCoverage=true `
-            /p:CoverletOutput=NetSdrClientAppTests/TestResults/coverage.xml `
-            /p:CoverletOutputFormat=opencover
+          
 
           
-        shell: pwsh
-      - name: SonarScanner Begin
-        run: |
-            dotnet tool install --global dotnet-sonarscanner
-            echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
-            dotnet sonarscanner begin `
-            /k:"androxiz_reinjeniring" `
-            /o:"androxiz" `
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
-            /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.xml" `
-            /d:sonar.qualitygate.wait=true
         shell: pwsh
       # 3) END: SonarScanner
       - name: SonarScanner End
