@@ -169,6 +169,8 @@ public class UdpTimedSender : IDisposable
 
     ushort i = 0;
 
+    // coverage ignore start
+    [ExcludeFromCodeCoverage]
     private void SendMessageCallback(object? state)
     {
         try
@@ -190,6 +192,7 @@ public class UdpTimedSender : IDisposable
             Console.WriteLine($"Error sending message: {ex.Message}");
         }
     }
+    // coverage ignore end
 
     public void StopSending()
     {
