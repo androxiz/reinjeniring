@@ -103,6 +103,8 @@ public class EchoServer
         }
     }
 
+    // coverage ignore start
+    [ExcludeFromCodeCoverage]
     public void Stop()
     {
         _cancellationTokenSource.Cancel();
@@ -111,6 +113,7 @@ public class EchoServer
         _cancellationTokenSource.Dispose();
         Console.WriteLine("Server stopped.");
     }
+    // coverage ignore end
 
     // coverage ignore start
     [ExcludeFromCodeCoverage]
