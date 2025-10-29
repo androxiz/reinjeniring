@@ -89,7 +89,7 @@ jobs:
           dotnet tool install --global dotnet-reportgenerator-globaltool
           echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
           reportgenerator `
-            -reports:"EchoTspServerTests/TestResults/coverage.xml;NetSdrClientAppTests/TestResults/coverage.xml" `
+            -reports:"EchoTspServerTests/**/coverage.xml;NetSdrClientAppTests/**/coverage.xml" `
             -targetdir:"coverage-merged" `
             -reporttypes:opencover `
             -filefilters:+*.cs
