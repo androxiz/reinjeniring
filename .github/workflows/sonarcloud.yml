@@ -75,12 +75,12 @@ jobs:
           dotnet test EchoTspServerTests/EchoTspServerTests.csproj -c Release --no-build `
             /p:CollectCoverage=true `
             /p:CoverletOutput=EchoTspServerTests/TestResults/coverage.xml `
-            /p:CoverletOutputFormat=opencover
+            /p:CoverletOutputFormat=cobertura
           
           dotnet test NetSdrClientAppTests/NetSdrClientAppTests.csproj -c Release --no-build `
             /p:CollectCoverage=true `
             /p:CoverletOutput=NetSdrClientAppTests/TestResults/coverage.xml `
-            /p:CoverletOutputFormat=opencover
+            /p:CoverletOutputFormat=cobertura
 
         shell: pwsh
       # 3) END: SonarScanner
