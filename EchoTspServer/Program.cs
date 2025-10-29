@@ -185,9 +185,9 @@ public class UdpTimedSender : IDisposable
             _udpClient.Send(msg, msg.Length, endpoint);
             Console.WriteLine($"Message sent to {_host}:{_port} ");
         }
-        catch (Exception ex)    // NOSONAR
+        catch (Exception ex)
         {
-            Console.WriteLine($"Error sending message: {ex.Message}");    // NOSONAR
+            Console.WriteLine($"Error sending message: {ex.Message}");
         }
     }
 
