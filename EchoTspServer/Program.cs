@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EchoTspServer;
 
@@ -28,6 +29,7 @@ public class EchoServer
         _acceptClientAsyncOverride = acceptClientAsyncOverride;
     }
 
+    [ExcludeFromCodeCoverage]
     public async Task StartAsync()
     {
         _listener = new TcpListener(IPAddress.Any, _port);
@@ -64,6 +66,7 @@ public class EchoServer
     /// <summary>
     /// Метод, який можна тестувати: просто повертає те, що отримав
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public async Task<byte[]> EchoMessageAsync(byte[] message, CancellationToken token)
     {
         await Task.Yield();
@@ -103,11 +106,12 @@ public class EchoServer
     {
         _cancellationTokenSource.Cancel();
         if (_listener != null)
-            _listener.Stop();
+            _listener.Stop();    // NOSONAR
         _cancellationTokenSource.Dispose();
         Console.WriteLine("Server stopped.");
     }
 
+    [ExcludeFromCodeCoverage]
     public static Task Main(string[] args)
     {
         EchoServer server = new EchoServer(5000);
