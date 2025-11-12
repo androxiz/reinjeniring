@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -22,7 +22,7 @@ namespace EchoTspServerTests
             byte[] message = Encoding.UTF8.GetBytes("Hello World");
 
             // Act
-            var result = await server.EchoMessageAsync(message, CancellationToken.None);
+            var result = await EchoServer.EchoMessageAsync(message, CancellationToken.None);
 
             // Assert
             Assert.AreEqual(message, result);
@@ -33,13 +33,13 @@ namespace EchoTspServerTests
         {
             // Arrange
             var server = new EchoServer(5000);
-            Assert.IsFalse(server.IsCancellationRequested);
+            Assert.That(server.IsCancellationRequested, Is.False);
 
             // Act
             server.Stop();
 
             // Assert
-            Assert.IsTrue(server.IsCancellationRequested);
+            Assert.That(server.IsCancellationRequested, Is.True);
         }
 
         [Test]
@@ -69,23 +69,23 @@ namespace EchoTspServerTests
         }
 
         [Test]
-        public void UdpTimedSender_SendMessageCallback_IncrementsCounter()
+        public async Task UdpTimedSender_SendMessageCallback_IncrementsCounter()
         {
             // Arrange
             var sender = new UdpTimedSender("127.0.0.1", 5000);
             // Use reflection to access private field 'i'
             var iField = typeof(UdpTimedSender).GetField("i", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Assert.NotNull(iField);
+            Assert.That(iField, Is.Not.Null);
 
             // Act
             sender.StartSending(10);
-            Thread.Sleep(50); // wait a few ticks
+            await Task.Delay(50); // wait a few ticks
             sender.StopSending();
 
             ushort iValue = (ushort)iField.GetValue(sender)!;
 
             // Assert
-            Assert.Greater(iValue, 0);
+            Assert.That(iValue, Is.GreaterThan(0));
         }
     }
 }
