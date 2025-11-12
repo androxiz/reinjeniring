@@ -1,4 +1,4 @@
-﻿using NetSdrClientApp.Messages;
+using NetSdrClientApp.Messages;
 using NetSdrClientApp.Networking;
 using System;
 using System.Collections.Generic;
@@ -14,8 +14,8 @@ namespace NetSdrClientApp
 {
     public class NetSdrClient
     {
-        private ITcpClient _tcpClient;
-        private IUdpClient _udpClient;
+        private readonly ITcpClient _tcpClient;
+        private readonly IUdpClient _udpClient;
 
         public bool IQStarted { get; set; }
 
@@ -118,7 +118,6 @@ namespace NetSdrClientApp
         {
             NetSdrMessageHelper.TranslateMessage(e, out MsgTypes type, out ControlItemCodes code, out ushort sequenceNum, out byte[] body);
             var samples = NetSdrMessageHelper.GetSamples(16, body);
-
             Console.WriteLine($"Samples recieved: " + body.Select(b => Convert.ToString(b, toBase: 16)).Aggregate((l, r) => $"{l} {r}"));
 
             using (FileStream fs = new FileStream("samples.bin", FileMode.Append, FileAccess.Write, FileShare.Read))
@@ -133,7 +132,7 @@ namespace NetSdrClientApp
 
         private TaskCompletionSource<byte[]> responseTaskSource;
 
-        public async Task<byte[]> SendTcpRequest(byte[] msg)
+        public async Task<byte[]?> SendTcpRequest(byte[] msg)
         {
             if (!_tcpClient.Connected)
             {
@@ -153,7 +152,6 @@ namespace NetSdrClientApp
 
         private void _tcpClient_MessageReceived(object? sender, byte[] e)
         {
-            //TODO: add Unsolicited messages handling here
             if (responseTaskSource != null)
             {
                 responseTaskSource.SetResult(e);
