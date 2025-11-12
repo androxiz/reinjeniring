@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using NetSdrClientApp;
 using NetSdrClientApp.Networking;
 
@@ -48,7 +48,7 @@ public class NetSdrClientTests
     }
 
     [Test]
-    public async Task DisconnectWithNoConnectionTest()
+    public void DisconnectWithNoConnectionTest()
     {
         //act
         _client.Disconect();
@@ -122,7 +122,7 @@ public class NetSdrClientTests
         _tcpMock.Setup(tcp => tcp.Connected).Returns(false);
         var client = new NetSdrClient(_tcpMock.Object, _updMock.Object);
         var result = await client.SendTcpRequest(new byte[] { 1, 2, 3 });
-        Assert.IsNull(result);
+        Assert.That(result, Is.Null);
     }
 
     [Test]
@@ -170,7 +170,7 @@ public class NetSdrClientTests
     }
 
     [Test]
-    public async Task StopIQAsync_NotStarted_DoesNotThrow()
+    public void StopIQAsync_NotStarted_DoesNotThrow()
     {
         // Arrange
         _tcpMock.Setup(tcp => tcp.Connected).Returns(true);
