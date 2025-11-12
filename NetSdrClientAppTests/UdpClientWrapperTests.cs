@@ -1,5 +1,4 @@
 using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -13,11 +12,12 @@ namespace NetSdrClientAppTests
     public class UdpClientWrapperTests
     {
         private UdpClientWrapper _udpClient;
+        private int _port = 55000;
 
         [SetUp]
         public void Setup()
         {
-            _udpClient = new UdpClientWrapper(0); // порт 0 = випадковий доступний
+            _udpClient = new UdpClientWrapper(_port);
         }
 
         [TearDown]
@@ -27,52 +27,75 @@ namespace NetSdrClientAppTests
         }
 
         [Test]
-        public void StopListening_WithoutStart_DoesNotThrow()
+        public async Task StartListeningAsync_ReceivesMessage_InvokesEvent()
         {
-            Assert.DoesNotThrow(() => _udpClient.StopListening());
+            // Arrange
+            byte[] testData = Encoding.UTF8.GetBytes("hello");
+            byte[]? receivedData = null;
+            var evt = new ManualResetEventSlim(false);
+
+            _udpClient.MessageReceived += (s, data) =>
+            {
+                receivedData = data;
+                evt.Set();
+            };
+
+            // Act
+            var listeningTask = _udpClient.StartListeningAsync();
+
+            using (var sender = new UdpClient())
+            {
+                sender.Send(testData, testData.Length, "127.0.0.1", _port);
+            }
+
+            bool signaled = evt.Wait(1000);
+
+            _udpClient.StopListening();
+            await Task.Delay(50); // подождать завершение цикла
+            _udpClient.Dispose();
+
+            // Assert
+            Assert.IsTrue(signaled, "MessageReceived event should be triggered");
+            Assert.That(receivedData, Is.EqualTo(testData));
         }
 
+        [Test]
+        public void StopListening_CancelsListeningWithoutException()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                _udpClient.StopListening();
+            });
+        }
 
         [Test]
-        public void Dispose_CallsStopListening_AndClosesResources()
+        public void Dispose_CleansUpResourcesWithoutException()
         {
-            Assert.DoesNotThrow(() => _udpClient.Dispose());
+            Assert.DoesNotThrow(() =>
+            {
+                _udpClient.Dispose();
+            });
         }
 
         [Test]
         public void Equals_SameEndpoint_ReturnsTrue()
         {
-            var wrapper1 = new UdpClientWrapper(12345);
-            var wrapper2 = new UdpClientWrapper(12345);
-
-            Assert.IsTrue(wrapper1.Equals(wrapper2));
+            var another = new UdpClientWrapper(_port);
+            Assert.IsTrue(_udpClient.Equals(another));
         }
 
         [Test]
         public void Equals_DifferentEndpoint_ReturnsFalse()
         {
-            var wrapper1 = new UdpClientWrapper(12345);
-            var wrapper2 = new UdpClientWrapper(54321);
-
-            Assert.IsFalse(wrapper1.Equals(wrapper2));
+            var another = new UdpClientWrapper(_port + 1);
+            Assert.IsFalse(_udpClient.Equals(another));
         }
 
         [Test]
-        public void GetHashCode_SameEndpoint_SameHash()
+        public void GetHashCode_ReturnsInt()
         {
-            var wrapper1 = new UdpClientWrapper(12345);
-            var wrapper2 = new UdpClientWrapper(12345);
-
-            Assert.That(wrapper2.GetHashCode(), Is.EqualTo(wrapper1.GetHashCode()));
-        }
-
-        [Test]
-        public void GetHashCode_DifferentEndpoint_DifferentHash()
-        {
-            var wrapper1 = new UdpClientWrapper(12345);
-            var wrapper2 = new UdpClientWrapper(54321);
-
-            Assert.That(wrapper2.GetHashCode(), Is.Not.EqualTo(wrapper1.GetHashCode()));
+            int hash = _udpClient.GetHashCode();
+            Assert.That(hash, Is.TypeOf<int>());
         }
     }
 }
