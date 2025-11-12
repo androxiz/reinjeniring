@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace NetSdrClientApp.Networking
 {
-    public class TcpClientWrapper : ITcpClient
+    public class TcpClientWrapper : ITcpClient, IDisposable
     {
         private string _host;
         private int _port;
@@ -120,6 +120,14 @@ namespace NetSdrClientApp.Networking
             {
                 throw new InvalidOperationException("Not connected to a server.");
             }
+        }
+
+        public void Dispose()
+        {
+            Disconnect();
+            _cts?.Dispose();
+            _stream?.Dispose();
+            _tcpClient?.Close();
         }
     }
 
