@@ -111,7 +111,7 @@ namespace NetSdrClientApp.Messages
             sampleSize /= 8; //to bytes
             if (sampleSize  > 4)
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("");
             }
 
             var bodyEnumerable = body as IEnumerable<byte>;
