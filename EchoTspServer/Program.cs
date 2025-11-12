@@ -67,7 +67,7 @@ public class EchoServer
     /// Метод, який можна тестувати: просто повертає те, що отримав
     /// </summary>
     [ExcludeFromCodeCoverage]
-    public async Task<byte[]> EchoMessageAsync(byte[] message, CancellationToken token)
+    public static async Task<byte[]> EchoMessageAsync(byte[] message, CancellationToken token)
     {
         await Task.Yield();
         return message;
