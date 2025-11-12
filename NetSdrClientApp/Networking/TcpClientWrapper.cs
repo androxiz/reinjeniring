@@ -122,7 +122,6 @@ namespace NetSdrClientApp.Networking
             }
         }
 
-        [ExcludeFromCodeCoverage]
         public void Dispose()
         {
             Disconnect();
